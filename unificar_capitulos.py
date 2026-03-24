@@ -7,7 +7,7 @@ from ebooklib import epub
 INPUT_DIR = Path("output")   # donde están los chapter_*.txt (modern)
 OUTPUT_FILE = "book.epub"
 
-BOOK_TITLE = "The Adventures of Huckleberry Finn"
+BOOK_TITLE = "The Adventures of Tom Sawyer"
 BOOK_AUTHOR = "Mark Twain"
 COVER_IMAGE = Path("assets/cover.png")   # ruta a la imagen de portada (jpg/png), o None para omitir
 
