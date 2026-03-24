@@ -1,0 +1,4 @@
+ebooklib==0.18
+beautifulsoup4==4.12.3
+ollama==0.2.1
+lxml==5.2.1

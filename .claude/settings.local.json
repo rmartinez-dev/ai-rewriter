@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Bash(sed -i '/^MODERN ENGLISH EDITION$/d' \"$f\")",
+      "Bash(done)"
+    ]
+  }
+}
