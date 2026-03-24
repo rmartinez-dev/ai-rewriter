@@ -1,7 +1,7 @@
 # book-rewriter
 
-Convierte un libro `.epub` de inglés antiguo a inglés moderno (nivel B1/B2)
-usando **Ollama + Llama 3.2 3B** completamente local, sin internet ni costo.
+Convierte capítulos `.txt` de inglés antiguo a inglés moderno (nivel B1/B2)
+usando **Ollama** completamente local, sin internet ni costo, y los empaqueta en un `.epub`.
 
 ---
 
@@ -9,7 +9,7 @@ usando **Ollama + Llama 3.2 3B** completamente local, sin internet ni costo.
 
 - Python 3.10 o superior
 - [Ollama](https://ollama.com) instalado y corriendo
-- Modelo `llama3.2:3b` descargado
+- Modelo configurado en `rewriter.py` (por defecto `gpt-oss:120b-cloud`)
 
 ---
 
@@ -17,7 +17,7 @@ usando **Ollama + Llama 3.2 3B** completamente local, sin internet ni costo.
 
 ```bash
 # 1. Clona o descarga el proyecto
-cd book-rewriter
+cd ai-transcription
 
 # 2. Crea entorno virtual (recomendado)
 python -m venv venv
@@ -30,62 +30,67 @@ source venv/bin/activate
 
 # 3. Instala dependencias
 pip install -r requirements.txt
-
-# 4. Asegúrate de tener el modelo en Ollama
-ollama pull llama3.2:3b
 ```
 
 ---
 
-## Uso
+## Flujo de trabajo
 
-### Uso básico
+### Paso 1 — Reescribir capítulos
 
-```bash
-python rewriter.py input/mi_libro.epub
-```
-
-El resultado se guarda en `output/mi_libro_modern.txt`
-
-### Opciones disponibles
+Coloca los archivos `chapter_1.txt`, `chapter_2.txt`, etc. en la carpeta `original/` y ejecuta:
 
 ```bash
-python rewriter.py input/mi_libro.epub --output mi_carpeta/
-python rewriter.py input/mi_libro.epub --chunk-size 200
-python rewriter.py input/mi_libro.epub --model llama3.1:8b
+python rewriter.py
 ```
 
-| Opción | Default | Descripción |
+Los archivos reescritos se guardan en `output/` con el nombre `chapter_N_modern.txt`.
+
+- Si un archivo ya existe en `output/`, se omite automáticamente (reanudable).
+- Configura las opciones editando las constantes al inicio de `rewriter.py`:
+
+| Variable | Default | Descripción |
 |---|---|---|
-| `--output` | `output/` | Carpeta donde guardar el resultado |
-| `--chunk-size` | `300` | Palabras por fragmento enviado al modelo |
-| `--model` | `llama3.2:3b` | Modelo Ollama a usar |
+| `MODEL` | `gpt-oss:120b-cloud` | Modelo Ollama a usar |
+| `CHUNK_SIZE` | `300` | Palabras por fragmento enviado al modelo |
+| `START_FROM` | `1` | Capítulo desde el que empezar |
+| `BATCH_SIZE` | `None` | Límite de capítulos a procesar (`None` = todos) |
+| `MAX_CHUNKS` | `None` | Límite de chunks por archivo (útil para testing) |
+| `DELAY_BETWEEN` | `0.5` | Segundos de espera entre llamadas al modelo |
+
+### Paso 2 — Generar el EPUB
+
+Una vez procesados los capítulos, ejecuta:
+
+```bash
+python unificar_capitulos.py
+```
+
+Lee los `chapter_*.txt` de `output/` y genera `book.epub`.
+
+Configura título, autor y portada al inicio de `unificar_capitulos.py`:
+
+| Variable | Descripción |
+|---|---|
+| `BOOK_TITLE` | Título del libro |
+| `BOOK_AUTHOR` | Autor |
+| `COVER_IMAGE` | Ruta a la imagen de portada (`.png` o `.jpg`), o `None` para omitir |
 
 ---
 
 ## Estructura del proyecto
 
 ```
-book-rewriter/
-├── rewriter.py          ← script principal
-├── requirements.txt     ← dependencias Python
+ai-transcription/
+├── rewriter.py            ← paso 1: reescribe capítulos TXT
+├── unificar_capitulos.py  ← paso 2: ensambla el EPUB
+├── requirements.txt
 ├── README.md
-├── input/               ← pon aquí tus archivos .epub
-├── output/              ← aquí aparece el .txt reescrito
-└── logs/                ← logs de cada ejecución
+├── original/              ← pon aquí los chapter_*.txt originales
+├── output/                ← capítulos reescritos (input para el EPUB)
+└── assets/
+    └── cover.png          ← portada opcional
 ```
-
----
-
-## Estimación de tiempo (i7-10700T, 16GB RAM, sin GPU)
-
-| Tamaño del libro | Chunks aprox. | Tiempo estimado |
-|---|---|---|
-| Novela corta (50k palabras) | ~170 | 2–4 horas |
-| Novela estándar (100k palabras) | ~334 | 4–8 horas |
-| Libro largo (200k palabras) | ~667 | 8–15 horas |
-
-> Tip: puedes dejar corriendo de noche. El script guarda progreso en logs/.
 
 ---
 
@@ -98,12 +103,11 @@ ollama serve
 
 **"Model not found"**
 ```bash
-ollama pull llama3.2:3b
+ollama pull <nombre-del-modelo>
 ```
 
-**El resultado tiene texto extraño o mezcla idiomas**
-→ Reduce el chunk-size: `--chunk-size 150`
+**El resultado mezcla idiomas o tiene texto extraño**
+→ Reduce `CHUNK_SIZE` a `150` en `rewriter.py`.
 
 **El proceso es muy lento**
 → Cierra otras aplicaciones para liberar RAM.
-→ Considera usar la API de Claude como alternativa (~$5 USD por libro).
