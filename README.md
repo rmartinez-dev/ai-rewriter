@@ -1,4 +1,4 @@
-# book-rewriter
+# Book-rewriter
 
 Convierte capítulos `.txt` de inglés antiguo a inglés moderno (nivel B1/B2)
 usando **Ollama** completamente local, sin internet ni costo, y los empaqueta en un `.epub`.
